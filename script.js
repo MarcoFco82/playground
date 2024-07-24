@@ -1,16 +1,27 @@
 console.log("Bienvenido a mi portafolio!");
+
 // Basic Three.js setup
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000080);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+// Stylized lighting setup
+// Ambient light for basic illumination
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Soft white light
 scene.add(ambientLight);
+
+// Directional light to simulate sunlight
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+directionalLight.position.set(5, 10, 7.5); // Position the light source
 scene.add(directionalLight);
+
+// Point light for dramatic effect
+const pointLight = new THREE.PointLight(0xff0000, 1, 100); // Red light
+pointLight.position.set(0, 5, 0);
+scene.add(pointLight);
 
 // Camera position
 camera.position.set(0, 5, 10);
@@ -23,7 +34,8 @@ let shipBox, pillarBoxes = [];
 loader.load('assets/ship.glb', (gltf) => {
     ship = gltf.scene;
     ship.position.set(0, 2, 0);
-    ship.rotation.y = THREE.Math.degToRad(45);
+    ship.rotation.y = THREE.Math.degToRad(90);
+    ship.scale.set(0.25,0.25,0.25);
     scene.add(ship);
     createBoundingBoxes();
 });
@@ -31,6 +43,7 @@ loader.load('assets/ship.glb', (gltf) => {
 loader.load('assets/pillars.glb', (gltf) => {
     pillars = gltf.scene;
     pillars.position.set(0, 0, 0);
+    pillars.scale.set(1.5,1.5,1.5);
     scene.add(pillars);
     createBoundingBoxes();
 });
