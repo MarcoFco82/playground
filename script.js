@@ -23,6 +23,7 @@ let shipBox, pillarBoxes = [];
 loader.load('assets/ship.glb', (gltf) => {
     ship = gltf.scene;
     ship.position.set(0, 2, 0);
+    ship.rotation.y = THREE.Math.degToRad(45);
     scene.add(ship);
     createBoundingBoxes();
 });
