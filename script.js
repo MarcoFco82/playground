@@ -1,130 +1,89 @@
-console.log("Bienvenido a mi portafolio!");
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Basic Three.js setup
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000080);
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
+let scene, camera, renderer, ship;
+let shipColor = 0xffffff;
+let bgColor = 0x000000;
+let keys = {};
 
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optional for softer shadows
+init();
+animate();
 
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+function init() {
+    // Scene setup
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(bgColor);
 
-// Stylized lighting setup
-// Ambient light for basic illumination
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Soft white light
-scene.add(ambientLight);
+    // Camera setup
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 5;
 
-// Directional light to simulate sunlight
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-directionalLight.position.set(5, 10, 7.5); // Position the light source
-directionalLight.castShadow = true; // Enable shadows
-directionalLight.shadow.mapSize.width = 2048; // Optional for higher quality shadows
-directionalLight.shadow.mapSize.height = 2048;
-directionalLight.shadow.camera.near = 0.5;
-directionalLight.shadow.camera.far = 500;
-scene.add(directionalLight);
+    // Renderer setup
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('container').appendChild(renderer.domElement);
 
-// Point light for dramatic effect
-const pointLight = new THREE.PointLight(0xff0000, 1, 100); // Red light
-pointLight.position.set(0, 5, 0);
-pointLight.castShadow = true; // Enable shadows
-pointLight.shadow.mapSize.width = 2048; // Optional for higher quality shadows
-pointLight.shadow.mapSize.height = 2048;
-pointLight.shadow.camera.near = 0.5;
-pointLight.shadow.camera.far = 500;
-scene.add(pointLight);
+    // Light setup
+    const light = new THREE.AmbientLight(0xffffff);
+    scene.add(light);
 
-// Camera position
-camera.position.set(0, 5, 10);
-
-// Load models
-const loader = new THREE.GLTFLoader();
-let ship, pillars;
-let shipBox, pillarBoxes = [];
-
-loader.load('assets/ship.glb', (gltf) => {
-    ship = gltf.scene;
-    ship.position.set(0, 2, 0); // Set the initial position higher on the Y axis
-    ship.rotation.y = THREE.Math.degToRad(45); // Rotate the ship 45 degrees counterclockwise around the Y-axis
-    ship.scale.set(0.25, 0.25, 0.25); // Scale the ship to 0.25
-    
-    ship.traverse((child) => {
-        if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-        }
-    });
-    scene.add(ship);
-    createBoundingBoxes();
-});
-
-loader.load('assets/pillars.glb', (gltf) => {
-    pillars = gltf.scene;
-    pillars.position.set(0, 0, 0);
-    
-    pillars.traverse((child) => {
-        if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-        }
-    });
-    scene.add(pillars);
-    createBoundingBoxes();
-});
-
-function createBoundingBoxes() {
-    if (ship) {
-        shipBox = new THREE.Box3().setFromObject(ship);
-    }
-    if (pillars) {
-        pillars.traverse((child) => {
-            if (child.isMesh) {
-                const box = new THREE.Box3().setFromObject(child);
-                pillarBoxes.push(box);
+    // GLTF Loader
+    const loader = new GLTFLoader();
+    loader.load('assets/ship.glb', function (gltf) {
+        ship = gltf.scene;
+        ship.traverse(function (node) {
+            if (node.isMesh) {
+                node.material.color.setHex(shipColor);
             }
         });
-    }
-}
+        scene.add(ship);
+    });
 
-function checkCollisions() {
-    if (ship) {
-        shipBox.setFromObject(ship);
-        for (let i = 0; i < pillarBoxes.length; i++) {
-            if (shipBox.intersectsBox(pillarBoxes[i])) {
-                console.log('Collision detected!');
-                // Handle collision (e.g., stop movement, bounce back, etc.)
-            }
+    // Event listeners
+    document.getElementById('color').addEventListener('input', (event) => {
+        shipColor = parseInt(event.target.value.replace('#', '0x'));
+        if (ship) {
+            ship.traverse(function (node) {
+                if (node.isMesh) {
+                    node.material.color.setHex(shipColor);
+                }
+            });
         }
-    }
+    });
+
+    document.getElementById('bgColor').addEventListener('input', (event) => {
+        bgColor = parseInt(event.target.value.replace('#', '0x'));
+        scene.background = new THREE.Color(bgColor);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        keys[event.key] = true;
+    });
+
+    document.addEventListener('keyup', (event) => {
+        keys[event.key] = false;
+    });
+
+    window.addEventListener('resize', onWindowResize, false);
 }
 
-let keys = {};
-document.addEventListener('keydown', (event) => {
-    keys[event.key] = true;
-});
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
 
-document.addEventListener('keyup', (event) => {
-    keys[event.key] = false;
-});
+function animate() {
+    requestAnimationFrame(animate);
 
-function update() {
     if (ship) {
-        // Update ship position based on keys
-        if (keys['ArrowUp']) ship.position.z -= 0.1;
-        if (keys['ArrowDown']) ship.position.z += 0.1;
-        if (keys['ArrowLeft']) ship.position.x -= 0.1;
-        if (keys['ArrowRight']) ship.position.x += 0.1;
-        
-        // Check collisions
-        checkCollisions();
-        
-        // Make the camera follow the ship
-        camera.position.set(ship.position.x, ship.position.y + 5, ship.position.z + 10);
-        camera.lookAt(ship.position);
+        ship.rotation.y += 0.01;
+
+        if (keys['ArrowUp']) ship.position.y += 0.05;
+        if (keys['ArrowDown']) ship.position.y -= 0.05;
+        if (keys['ArrowLeft']) ship.position.x -= 0.05;
+        if (keys['ArrowRight']) ship.position.x += 0.05;
     }
-    requestAnimationFrame(update);
+
     renderer.render(scene, camera);
 }
