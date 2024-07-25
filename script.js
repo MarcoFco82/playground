@@ -28,6 +28,7 @@ function init() {
     const loader = new THREE.GLTFLoader();
     loader.load('assets/ship.glb', function (gltf) {
         ship = gltf.scene;
+        ship.scale.set(0.33,0.33,0.33);
         ship.traverse(function (node) {
             if (node.isMesh) {
                 node.material.color.setHex(shipColor);
