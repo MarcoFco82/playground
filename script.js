@@ -24,6 +24,16 @@ function init() {
     const light = new THREE.AmbientLight(0xffffff);
     scene.add(light);
 
+    // Directional light with shadows
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 10, 7.5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 1024; // default
+    directionalLight.shadow.mapSize.height = 1024; // default
+    directionalLight.shadow.camera.near = 0.5; // default
+    directionalLight.shadow.camera.far = 500; // default
+    scene.add(directionalLight);
+
     // GLTF Loader
     const loader = new THREE.GLTFLoader();
     loader.load('assets/ship.glb', function (gltf) {
@@ -32,6 +42,8 @@ function init() {
         ship.traverse(function (node) {
             if (node.isMesh) {
                 node.material.color.setHex(shipColor);
+                node.castShadow = true;
+                node.receiveShadow = true;
             }
         });
         scene.add(ship);
