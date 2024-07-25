@@ -1,6 +1,3 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-
 let scene, camera, renderer, ship;
 let shipColor = 0xffffff;
 let bgColor = 0x000000;
@@ -28,7 +25,7 @@ function init() {
     scene.add(light);
 
     // GLTF Loader
-    const loader = new GLTFLoader();
+    const loader = new THREE.GLTFLoader();
     loader.load('assets/ship.glb', function (gltf) {
         ship = gltf.scene;
         ship.traverse(function (node) {
